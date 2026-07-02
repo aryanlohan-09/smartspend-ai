@@ -34,8 +34,7 @@ class EasyOCRReceiptReader:
                     confidences.append(confidence)
 
         return OCRExtraction(
-            text="
-".join(text_blocks),
+            text="\n".join(text_blocks),
             confidence_score=_average(confidences),
             language_codes=",".join(self.languages),
         )
