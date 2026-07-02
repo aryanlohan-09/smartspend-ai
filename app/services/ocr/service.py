@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from sqlalchemy import select
 
 from app.extensions import db
@@ -18,6 +20,11 @@ class ReceiptOCRService:
 
     def create_receipt_from_upload(self, file, user_id: int) -> Receipt:
         stored_file = store_receipt_file(file)
+        existing = self._find_existing_by_hash(user_id, stored_file.sha256_hash)
+        if existing is not None:
+            Path(stored_file.file_path).unlink(missing_ok=True)
+            return existing
+
         receipt = Receipt(
             user_id=user_id,
             original_filename=stored_file.original_filename,
@@ -32,11 +39,6 @@ class ReceiptOCRService:
         db.session.commit()
 
         try:
-            duplicate = self._find_exact_duplicate(receipt)
-            if duplicate is not None:
-                receipt.status = ReceiptStatus.DUPLICATE
-                receipt.duplicate_of_id = duplicate.id
-
             extraction = self.reader.extract_text(stored_file.file_path, stored_file.extension)
             ocr_result = OCRResult(
                 receipt_id=receipt.id,
@@ -49,8 +51,7 @@ class ReceiptOCRService:
             db.session.flush()
 
             self.expense_service.create_expense_from_ocr(receipt)
-            if receipt.status != ReceiptStatus.DUPLICATE:
-                receipt.status = ReceiptStatus.PROCESSED
+            receipt.status = ReceiptStatus.PROCESSED
             db.session.commit()
         except Exception as exc:
             db.session.rollback()
@@ -61,11 +62,10 @@ class ReceiptOCRService:
 
         return receipt
 
-    def _find_exact_duplicate(self, receipt: Receipt) -> Receipt | None:
+    def _find_existing_by_hash(self, user_id: int, file_hash: str) -> Receipt | None:
         return db.session.scalar(
             select(Receipt)
-            .where(Receipt.user_id == receipt.user_id)
-            .where(Receipt.file_hash == receipt.file_hash)
-            .where(Receipt.id != receipt.id)
+            .where(Receipt.user_id == user_id)
+            .where(Receipt.file_hash == file_hash)
             .order_by(Receipt.created_at.asc())
         )

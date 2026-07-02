@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from flask import current_app
+
 
 @dataclass(frozen=True)
 class OCRExtraction:
@@ -32,7 +34,8 @@ class EasyOCRReceiptReader:
                     confidences.append(confidence)
 
         return OCRExtraction(
-            text="\n".join(text_blocks),
+            text="
+".join(text_blocks),
             confidence_score=_average(confidences),
             language_codes=",".join(self.languages),
         )
@@ -43,7 +46,14 @@ class EasyOCRReceiptReader:
                 import easyocr
             except ImportError as exc:
                 raise RuntimeError("EasyOCR is not installed. Install project requirements before processing receipts.") from exc
-            self._reader = easyocr.Reader(self.languages, gpu=False)
+
+            model_dir = current_app.config.get("EASYOCR_MODEL_DIR")
+            self._reader = easyocr.Reader(
+                self.languages,
+                gpu=False,
+                model_storage_directory=model_dir,
+                verbose=False,
+            )
         return self._reader
 
     def _image_paths(self, file_path: str, extension: str) -> list[Path]:
@@ -60,7 +70,7 @@ class EasyOCRReceiptReader:
             raise RuntimeError("PDF processing requires pdf2image. Install project requirements before uploading PDFs.") from exc
 
         temp_dir = TemporaryDirectory()
-        pages = convert_from_path(file_path, dpi=220, fmt="png", output_folder=temp_dir.name)
+        pages = convert_from_path(file_path, dpi=180, fmt="png", output_folder=temp_dir.name)
         image_paths = []
         for index, page in enumerate(pages, start=1):
             image_path = Path(temp_dir.name) / f"page-{index}.png"

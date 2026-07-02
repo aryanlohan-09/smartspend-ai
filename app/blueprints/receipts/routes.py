@@ -40,9 +40,11 @@ def upload_post():
         return redirect(url_for("receipts.upload"))
 
     if receipt.status == ReceiptStatus.FAILED:
-        flash("Receipt uploaded, but processing failed. Details are shown below.", "warning")
+        flash("Receipt was saved, but processing failed. Details are shown below.", "warning")
+    elif receipt.status == ReceiptStatus.PROCESSING:
+        flash("This receipt is already queued for processing.", "info")
     elif receipt.status == ReceiptStatus.DUPLICATE:
-        flash("Receipt uploaded and matched to an earlier receipt.", "info")
+        flash("This file was already uploaded. Showing the existing receipt.", "info")
     else:
         flash("Receipt uploaded, scanned, and categorized.", "success")
 
