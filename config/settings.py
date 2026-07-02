@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 
@@ -15,14 +16,36 @@ def _get_bool(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _database_uri() -> str:
-    uri = os.getenv(
+def _raw_database_uri() -> str:
+    return os.getenv(
         "DATABASE_URL",
         "mysql+pymysql://smartspend_user:smartspend_password@localhost:3306/smartspend_ai",
     )
+
+
+def _database_uri() -> str:
+    uri = _raw_database_uri()
     if uri.startswith("mysql://"):
-        return uri.replace("mysql://", "mysql+pymysql://", 1)
-    return uri
+        uri = uri.replace("mysql://", "mysql+pymysql://", 1)
+    return _strip_unsupported_mysql_query_params(uri)
+
+
+def _strip_unsupported_mysql_query_params(uri: str) -> str:
+    parts = urlsplit(uri)
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parts.query, keep_blank_values=True)
+        if key.lower() not in {"ssl-mode", "sslmode"}
+    ]
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+def _database_connect_args() -> dict:
+    raw_uri = _raw_database_uri().lower()
+    ssl_requested = "ssl-mode=" in raw_uri or "sslmode=" in raw_uri or _get_bool("DATABASE_SSL", False)
+    if ssl_requested:
+        return {"ssl": {}}
+    return {}
 
 
 class BaseConfig:
@@ -33,6 +56,7 @@ class BaseConfig:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 280,
+        "connect_args": _database_connect_args(),
     }
     AUTO_CREATE_TABLES = _get_bool("AUTO_CREATE_TABLES", False)
 
@@ -70,6 +94,7 @@ class TestingConfig(BaseConfig):
         "TEST_DATABASE_URL",
         "sqlite:///:memory:",
     )
+    SQLALCHEMY_ENGINE_OPTIONS = {}
 
 
 def get_config():
