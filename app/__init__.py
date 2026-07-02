@@ -16,6 +16,7 @@ def create_app(config_object=None) -> Flask:
     configure_logging(app)
     _ensure_runtime_directories(app)
     _init_extensions(app)
+    _create_tables_if_enabled(app)
     register_csrf_protection(app)
     _register_blueprints(app)
     _register_error_handlers(app)
@@ -44,6 +45,16 @@ def _init_extensions(app: Flask) -> None:
         if not user_id.isdigit():
             return None
         return db.session.get(User, int(user_id))
+
+
+def _create_tables_if_enabled(app: Flask) -> None:
+    if not app.config.get("AUTO_CREATE_TABLES"):
+        return
+    with app.app_context():
+        from app import models  # noqa: F401
+
+        db.create_all()
+        app.logger.info("Database tables verified via AUTO_CREATE_TABLES")
 
 
 def _register_blueprints(app: Flask) -> None:

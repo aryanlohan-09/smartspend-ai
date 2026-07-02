@@ -34,6 +34,7 @@ class BaseConfig:
         "pool_pre_ping": True,
         "pool_recycle": 280,
     }
+    AUTO_CREATE_TABLES = _get_bool("AUTO_CREATE_TABLES", False)
 
     UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", str(BASE_DIR / "app" / "static" / "uploads"))
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH_MB", "8")) * 1024 * 1024
@@ -64,6 +65,7 @@ class ProductionConfig(BaseConfig):
 class TestingConfig(BaseConfig):
     TESTING = True
     WTF_CSRF_ENABLED = False
+    AUTO_CREATE_TABLES = False
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "TEST_DATABASE_URL",
         "sqlite:///:memory:",
