@@ -1,0 +1,44 @@
+{% extends "shared/base.html" %}
+
+{% block body %}
+  <div class="app-layout">
+    <aside class="sidebar">
+      <a class="brand-lockup sidebar-brand" href="{{ url_for('dashboard.index') }}">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">SmartSpend AI</span>
+      </a>
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <a href="{{ url_for('receipts.upload') }}">Upload</a>
+        <a href="{{ url_for('receipts.history') }}">History</a>
+        <a href="{{ url_for('insights.index') }}">Insights</a>
+      </nav>
+      <div class="sidebar-exports">
+        <a href="{{ url_for('exports.csv_export') }}">Export CSV</a>
+        <a href="{{ url_for('exports.pdf_export') }}">Export PDF</a>
+      </div>
+    </aside>
+    <div class="main-area">
+      <header class="app-topbar">
+        <div>
+          <p class="eyebrow">Workspace</p>
+          <strong>{{ current_user.name }}</strong>
+        </div>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+          <button class="button-secondary" type="submit">Sign out</button>
+        </form>
+      </header>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack content-flashes">
+            {% for category, message in messages %}
+              <p class="flash flash-{{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block app_content %}{% endblock %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "shared/app_shell.html" %}
+{% block title %}Receipt history - SmartSpend AI{% endblock %}
+{% block app_content %}
+  <section class="page-header"><div><h1>History</h1><p>Search, filter, sort, and review processed receipts.</p></div></section>
+  <section class="content-panel">
+    <form class="filter-bar" method="get">
+      <input name="q" type="search" placeholder="Search merchant or receipt" value="{{ request.args.get('q', '') }}">
+      <select name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}" {% if request.args.get('category') == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select>
+      <select name="sort"><option value="created">Newest</option><option value="date">Purchase date</option><option value="merchant">Merchant</option><option value="amount">Amount</option><option value="category">Category</option></select>
+      <select name="direction"><option value="desc">Descending</option><option value="asc" {% if request.args.get('direction') == 'asc' %}selected{% endif %}>Ascending</option></select>
+      <button class="button-primary" type="submit">Apply</button>
+    </form>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Merchant</th><th>Date</th><th>Total</th><th>Category</th><th>Status</th></tr></thead><tbody>
+      {% for receipt in receipts %}
+        <tr><td><a href="{{ url_for('receipts.detail', receipt_id=receipt.id) }}">{{ receipt.expense.merchant_name if receipt.expense else receipt.original_filename }}</a></td><td>{{ receipt.expense.purchased_at.date() if receipt.expense and receipt.expense.purchased_at else "-" }}</td><td>{% if receipt.expense %}{{ receipt.expense.currency }} {{ receipt.expense.total_amount }}{% else %}-{% endif %}</td><td>{{ receipt.expense.category.value if receipt.expense else "-" }}</td><td>{{ receipt.status.value }}</td></tr>
+      {% else %}
+        <tr><td colspan="5">No receipts match your filters.</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    <div class="pagination"><span>Page {{ pagination.page }} of {{ pagination.pages }}</span>{% if pagination.has_prev %}<a href="{{ url_for('receipts.history', page=pagination.page-1, q=request.args.get('q'), category=request.args.get('category'), sort=request.args.get('sort'), direction=request.args.get('direction')) }}">Previous</a>{% endif %}{% if pagination.has_next %}<a href="{{ url_for('receipts.history', page=pagination.page+1, q=request.args.get('q'), category=request.args.get('category'), sort=request.args.get('sort'), direction=request.args.get('direction')) }}">Next</a>{% endif %}</div>
+  </section>
+{% endblock %}

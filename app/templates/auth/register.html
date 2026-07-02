@@ -1,0 +1,34 @@
+{% extends "auth/layout.html" %}
+
+{% block title %}Create account - SmartSpend AI{% endblock %}
+
+{% block auth_content %}
+  <div class="auth-heading">
+    <h1>Create account</h1>
+    <p>Start organizing receipt data with secure account access.</p>
+  </div>
+
+  <form class="auth-form" method="post" action="{{ url_for('auth.register_post') }}" novalidate>
+    <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+
+    <label for="name">Full name</label>
+    <input id="name" name="name" type="text" autocomplete="name" value="{{ form.name or '' }}" required>
+    {% if errors.name %}<p class="form-error">{{ errors.name }}</p>{% endif %}
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" autocomplete="email" value="{{ form.email or '' }}" required>
+    {% if errors.email %}<p class="form-error">{{ errors.email }}</p>{% endif %}
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" required>
+    {% if errors.password %}<p class="form-error">{{ errors.password }}</p>{% endif %}
+
+    <label for="confirm_password">Confirm password</label>
+    <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required>
+    {% if errors.confirm_password %}<p class="form-error">{{ errors.confirm_password }}</p>{% endif %}
+
+    <button class="button-primary" type="submit">Create account</button>
+  </form>
+
+  <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+{% endblock %}

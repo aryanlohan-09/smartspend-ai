@@ -1,0 +1,43 @@
+{% extends "shared/app_shell.html" %}
+{% block title %}Dashboard - SmartSpend AI{% endblock %}
+{% block app_content %}
+  <section class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Receipt-backed spending overview.</p>
+    </div>
+    <a class="button-primary" href="{{ url_for('receipts.upload') }}">Upload receipt</a>
+  </section>
+
+  <section class="metric-grid">
+    <article class="metric-card"><span>Total spending</span><strong>INR {{ metrics.total_spending }}</strong></article>
+    <article class="metric-card"><span>This month</span><strong>INR {{ metrics.monthly_spending }}</strong></article>
+    <article class="metric-card"><span>Receipts</span><strong>{{ metrics.receipt_count }}</strong></article>
+    <article class="metric-card"><span>Highest expense</span><strong>{% if metrics.highest_expense %}INR {{ metrics.highest_expense.total_amount }}{% else %}None{% endif %}</strong></article>
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="content-panel"><h2>Spending by category</h2><canvas id="categoryChart"></canvas></article>
+    <article class="content-panel"><h2>Monthly trend</h2><canvas id="monthlyChart"></canvas></article>
+    <article class="content-panel wide-panel"><h2>Recent receipts</h2>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>File</th><th>Merchant</th><th>Total</th><th>Status</th></tr></thead><tbody>
+      {% for receipt in metrics.recent_receipts %}
+        <tr><td><a href="{{ url_for('receipts.detail', receipt_id=receipt.id) }}">{{ receipt.original_filename }}</a></td><td>{{ receipt.expense.merchant_name if receipt.expense else "Pending" }}</td><td>{% if receipt.expense %}{{ receipt.expense.currency }} {{ receipt.expense.total_amount }}{% else %}-{% endif %}</td><td>{{ receipt.status.value }}</td></tr>
+      {% else %}
+        <tr><td colspan="4">No receipts uploaded yet.</td></tr>
+      {% endfor %}
+      </tbody></table></div>
+    </article>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    window.smartSpendCharts = {
+      categoryLabels: {{ metrics.category_labels | tojson }},
+      categoryValues: {{ metrics.category_values | tojson }},
+      monthlyLabels: {{ metrics.monthly_labels | tojson }},
+      monthlyValues: {{ metrics.monthly_values | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

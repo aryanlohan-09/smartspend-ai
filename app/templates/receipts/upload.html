@@ -1,0 +1,16 @@
+{% extends "shared/app_shell.html" %}
+{% block title %}Upload receipt - SmartSpend AI{% endblock %}
+{% block app_content %}
+  <section class="page-header"><div><h1>Upload receipt</h1><p>Accepted formats: JPG, JPEG, PNG, and PDF.</p></div></section>
+  <section class="content-panel narrow-panel">
+    <form class="upload-form" method="post" action="{{ url_for('receipts.upload_post') }}" enctype="multipart/form-data">
+      <input name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+      <label class="file-drop" for="receipt">
+        <span class="file-drop-title">Select a receipt file</span>
+        <span class="file-drop-help">OCR and Gemini extraction start after upload.</span>
+        <input id="receipt" name="receipt" type="file" accept=".jpg,.jpeg,.png,.pdf" required>
+      </label>
+      <button class="button-primary" type="submit">Upload and scan</button>
+    </form>
+  </section>
+{% endblock %}

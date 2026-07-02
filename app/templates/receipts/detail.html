@@ -1,0 +1,26 @@
+{% extends "shared/app_shell.html" %}
+{% block title %}Receipt details - SmartSpend AI{% endblock %}
+{% block app_content %}
+  <section class="page-header split-heading">
+    <div><h1>{{ receipt.original_filename }}</h1><p>Status: <strong>{{ receipt.status.value }}</strong></p></div>
+    <a class="button-primary" href="{{ url_for('receipts.upload') }}">Upload another</a>
+  </section>
+  <section class="content-panel">
+    {% if receipt.failure_reason %}<p class="flash flash-warning">{{ receipt.failure_reason }}</p>{% endif %}
+    {% if receipt.duplicate_of_id %}<p class="flash flash-info">This upload matches an earlier receipt.</p>{% endif %}
+    {% if receipt.expense %}
+      <div class="structured-grid">
+        <div class="structured-item"><span>Merchant</span><strong>{{ receipt.expense.merchant_name }}</strong></div>
+        <div class="structured-item"><span>Total</span><strong>{{ receipt.expense.currency }} {{ receipt.expense.total_amount }}</strong></div>
+        <div class="structured-item"><span>GST</span><strong>{{ receipt.expense.gst_amount or 'Not found' }}</strong></div>
+        <div class="structured-item"><span>Payment</span><strong>{{ receipt.expense.payment_method.value }}</strong></div>
+        <div class="structured-item"><span>Receipt no.</span><strong>{{ receipt.expense.receipt_number or 'Not found' }}</strong></div>
+        <div class="structured-item"><span>Purchased at</span><strong>{{ receipt.expense.purchased_at or 'Not found' }}</strong></div>
+      </div>
+    {% endif %}
+    <div class="receipt-grid">
+      <div><h2>OCR text</h2><pre class="ocr-output">{{ receipt.ocr_result.raw_text if receipt.ocr_result else 'OCR text is not available.' }}</pre></div>
+      <aside class="metadata-list"><h2>Structured data</h2>{% if receipt.expense %}<pre class="json-output">{{ receipt.expense.structured_data | tojson(indent=2) }}</pre>{% else %}<p class="muted-text">AI extraction is not available for this receipt.</p>{% endif %}</aside>
+    </div>
+  </section>
+{% endblock %}

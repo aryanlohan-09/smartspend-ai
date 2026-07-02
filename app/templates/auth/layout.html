@@ -1,0 +1,22 @@
+{% extends "shared/base.html" %}
+
+{% block body %}
+  <main class="auth-shell">
+    <section class="auth-panel" aria-label="Authentication">
+      <div class="brand-lockup">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">SmartSpend AI</span>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <p class="flash flash-{{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block auth_content %}{% endblock %}
+    </section>
+  </main>
+{% endblock %}

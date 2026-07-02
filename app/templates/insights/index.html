@@ -1,0 +1,15 @@
+{% extends "shared/app_shell.html" %}
+{% block title %}AI insights - SmartSpend AI{% endblock %}
+{% block app_content %}
+  <section class="page-header"><div><h1>AI Insights</h1><p>Monthly summary and practical saving suggestions.</p></div></section>
+  <section class="content-panel insights-panel">
+    {% if insight %}
+      <article><span>Monthly summary</span><p>{{ insight.summary }}</p></article>
+      <article><span>Largest category</span><p>{{ insight.largest_category }}</p></article>
+      <article><span>Spending habits</span><p>{{ insight.spending_habits }}</p></article>
+      <article><span>Saving suggestions</span><p>{{ insight.saving_suggestions }}</p></article>
+    {% else %}
+      <p class="muted-text">Upload and process receipts this month to generate insights.</p>
+    {% endif %}
+  </section>
+{% endblock %}
