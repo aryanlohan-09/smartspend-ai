@@ -16,10 +16,13 @@ def _get_bool(name: str, default: bool = False) -> bool:
 
 
 def _database_uri() -> str:
-    return os.getenv(
+    uri = os.getenv(
         "DATABASE_URL",
         "mysql+pymysql://smartspend_user:smartspend_password@localhost:3306/smartspend_ai",
     )
+    if uri.startswith("mysql://"):
+        return uri.replace("mysql://", "mysql+pymysql://", 1)
+    return uri
 
 
 class BaseConfig:
