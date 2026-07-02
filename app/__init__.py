@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from flask import Flask
+from sqlalchemy.exc import OperationalError
 
 from app.extensions import db, login_manager
 from app.utils.csrf import register_csrf_protection
@@ -53,8 +54,20 @@ def _create_tables_if_enabled(app: Flask) -> None:
     with app.app_context():
         from app import models  # noqa: F401
 
-        db.create_all()
-        app.logger.info("Database tables verified via AUTO_CREATE_TABLES")
+        try:
+            db.create_all()
+            app.logger.info("Database tables verified via AUTO_CREATE_TABLES")
+        except OperationalError as exc:
+            if _is_mysql_table_exists_error(exc):
+                app.logger.info("Database tables already exist; continuing startup")
+                return
+            raise
+
+
+def _is_mysql_table_exists_error(exc: OperationalError) -> bool:
+    original = getattr(exc, "orig", None)
+    error_code = original.args[0] if original and getattr(original, "args", None) else None
+    return error_code == 1050
 
 
 def _register_blueprints(app: Flask) -> None:
